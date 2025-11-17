@@ -110,8 +110,7 @@ export function createNumericEvaluationExperiment(): Experiment {
 // 実験3: 選択式レビュー評価の有効性評価
 export function createEffectivenessExperiment(group: ExperimentVariant): Experiment {
 	const taskType = group === 'control' ? 'helpful-votes' : 'sentence-annotations';
-	const taskTitle =
-		group === 'control' ? '数値的レビュー評価を閲覧' : '選択式レビュー評価を閲覧';
+	const taskTitle = group === 'control' ? '数値的レビュー評価を閲覧' : '選択式レビュー評価を閲覧';
 
 	return {
 		id: 'effectiveness',
@@ -254,4 +253,3 @@ export const effectivenessQuestions: Question[] = [
 		required: true
 	}
 ];
-

@@ -121,4 +121,3 @@ export interface ExperimentLog {
 	data: AnnotationRecord | VoteRecord | FeedbackRecord | Record<string, unknown>;
 	timestamp: string;
 }
-

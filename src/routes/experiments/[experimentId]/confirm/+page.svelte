@@ -4,14 +4,12 @@
 	import { page } from '$app/stores';
 	import { get } from 'svelte/store';
 	import { goto } from '$app/navigation';
-	import {
-		currentExperiment,
-		restoreCurrentExperiment
-	} from '$lib/experiments/store';
+	import { currentExperiment, restoreCurrentExperiment } from '$lib/experiments/store';
 	import type { Experiment } from '$lib/experiments/types';
 	import { Card, CardContent, CardHeader, CardTitle } from '$shared/components/ui/card';
 	import { Button } from '$shared/components/ui/button';
 	import { CheckCircle, ArrowLeft } from '@lucide/svelte';
+	import { getTaskPath } from '$lib/experiments/navigation';
 
 	let { data }: { data: PageData } = $props();
 
@@ -72,9 +70,7 @@
 		// 最後のタスクに戻る
 		if (experiment && experiment.tasks.length > 0) {
 			const lastTask = experiment.tasks[experiment.tasks.length - 1];
-			const currentUrl = new URL(window.location.href);
-			const params = new URLSearchParams(currentUrl.search);
-			goto(`/experiments/${experimentId}/task/${lastTask.id}?${params.toString()}`);
+			goto(getTaskPath(experimentId, lastTask));
 		} else {
 			goto(`/experiments/${experimentId}/start`);
 		}
@@ -151,4 +147,3 @@
 		</Card>
 	</div>
 {/if}
-

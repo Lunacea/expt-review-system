@@ -1,7 +1,13 @@
 // 実験管理のストア
 
 import { writable, derived, get } from 'svelte/store';
-import type { Experiment, ExperimentTask, ParticipantData, ExperimentLog, Questionnaire } from './types';
+import type {
+	Experiment,
+	ExperimentTask,
+	ParticipantData,
+	ExperimentLog,
+	Questionnaire
+} from './types';
 
 // 参加者データ
 export const participantData = writable<ParticipantData | null>(null);
@@ -55,9 +61,10 @@ function normalizeExperimentIdentifiers(experiment: Experiment): Experiment {
 	return normalized;
 }
 
-function normalizeExperiments(
-	experiments: Experiment[]
-): { normalized: Experiment[]; changed: boolean } {
+function normalizeExperiments(experiments: Experiment[]): {
+	normalized: Experiment[];
+	changed: boolean;
+} {
 	let changed = false;
 	const normalized = experiments.map((experiment) => {
 		const next = normalizeExperimentIdentifiers(experiment);
@@ -146,7 +153,7 @@ export function restoreCurrentExperiment(): Experiment | null {
 export function startExperiment(experiment: Experiment) {
 	// 既存の実験履歴を確認
 	const existing = get(participantData)?.experiments.find((exp) => exp.id === experiment.id);
-	
+
 	let updatedExp: Experiment;
 	if (existing) {
 		// 既存の実験を更新（開始時刻は最初の開始時のみ）
@@ -163,7 +170,7 @@ export function startExperiment(experiment: Experiment) {
 			startedAt: new Date().toISOString()
 		};
 	}
-	
+
 	currentExperiment.set(updatedExp);
 	persistCurrentExperiment(updatedExp);
 
@@ -178,7 +185,7 @@ export function startExperiment(experiment: Experiment) {
 			persistParticipantData(newData);
 			return newData;
 		}
-		
+
 		// 既存の実験を更新または新規追加
 		const existingIndex = data.experiments.findIndex((exp) => exp.id === experiment.id);
 		let updated: ParticipantData;
@@ -229,7 +236,7 @@ export function completeTask(taskId: string) {
 
 		// 現在のタスクのインデックスを検索
 		const currentTaskIndex = exp.tasks.findIndex((t) => t.id === taskId);
-		
+
 		const updatedTasks = exp.tasks.map((task) => {
 			if (task.id !== taskId || task.completed) {
 				return task;
@@ -238,10 +245,11 @@ export function completeTask(taskId: string) {
 		});
 
 		// 次のタスクのインデックスを計算（現在のタスクの次のインデックス）
-		const nextIndex = currentTaskIndex !== -1 
-			? Math.min(currentTaskIndex + 1, updatedTasks.length)
-			: Math.min(exp.currentTaskIndex + 1, updatedTasks.length);
-		
+		const nextIndex =
+			currentTaskIndex !== -1
+				? Math.min(currentTaskIndex + 1, updatedTasks.length)
+				: Math.min(exp.currentTaskIndex + 1, updatedTasks.length);
+
 		const allCompleted = updatedTasks.every((t) => t.completed);
 
 		const updatedExperiment: Experiment = {
@@ -285,7 +293,7 @@ export function uncompleteTask(taskId: string) {
 
 		// 現在のタスクのインデックスを検索
 		const currentTaskIndex = exp.tasks.findIndex((t) => t.id === taskId);
-		
+
 		const updatedTasks = exp.tasks.map((task) => {
 			if (task.id !== taskId || !task.completed) {
 				return task;
@@ -295,7 +303,7 @@ export function uncompleteTask(taskId: string) {
 
 		// currentTaskIndexを現在のタスクに戻す
 		const updatedIndex = currentTaskIndex !== -1 ? currentTaskIndex : exp.currentTaskIndex;
-		
+
 		const allCompleted = updatedTasks.every((t) => t.completed);
 
 		const updatedExperiment: Experiment = {
@@ -333,10 +341,7 @@ export function uncompleteTask(taskId: string) {
 }
 
 // イベントをログに記録
-export function logEvent(
-	eventType: ExperimentLog['eventType'],
-	data: Record<string, unknown>
-) {
+export function logEvent(eventType: ExperimentLog['eventType'], data: Record<string, unknown>) {
 	const exp = get(currentExperiment);
 	const task = get(currentTask);
 	const participant = get(participantData);
@@ -431,4 +436,3 @@ export function exportExperimentData() {
 		exportedAt: new Date().toISOString()
 	};
 }
-

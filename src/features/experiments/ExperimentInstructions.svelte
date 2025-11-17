@@ -15,9 +15,13 @@
 	let { experiment, onStart, onClose, showCloseButton = false }: Props = $props();
 
 	// 実験ごとの詳細説明
-	const experimentDetails: Record<string, { objective: string; procedure: string[]; time: string; notes: string[] }> = {
+	const experimentDetails: Record<
+		string,
+		{ objective: string; procedure: string[]; time: string; notes: string[] }
+	> = {
 		'text-vs-selection': {
-			objective: '選択式レビュー評価とテキストによるレビュー評価の差異を評価し、どちらがより表現力があり、使いやすいかを明らかにします。',
+			objective:
+				'選択式レビュー評価とテキストによるレビュー評価の差異を評価し、どちらがより表現力があり、使いやすいかを明らかにします。',
 			procedure: [
 				'レビュー評価を2種類の方法（テキスト入力と選択式）で実施していただきます',
 				'実施順序はランダムに決定されます',
@@ -32,7 +36,8 @@
 			]
 		},
 		'numeric-evaluation': {
-			objective: '「役に立った」のような数値的な投票が、自分の評価をどの程度反映できているかを確認します。',
+			objective:
+				'「役に立った」のような数値的な投票が、自分の評価をどの程度反映できているかを確認します。',
 			procedure: [
 				'レビューに対して「役に立った」の投票を行っていただきます',
 				'すべての投票が終わったら、その理由をアンケートで記述していただきます',
@@ -155,11 +160,8 @@
 		<!-- 開始ボタン -->
 		{#if onStart}
 			<div class="flex justify-center pt-4">
-				<Button size="lg" onclick={onStart} class="px-8">
-					実験を開始する
-				</Button>
+				<Button size="lg" onclick={onStart} class="px-8">実験を開始する</Button>
 			</div>
 		{/if}
 	</CardContent>
 </Card>
-

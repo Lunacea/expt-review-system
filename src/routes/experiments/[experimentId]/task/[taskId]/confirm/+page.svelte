@@ -38,13 +38,13 @@
 		task = exp.tasks.find((t) => t.id === taskId) ?? null;
 	}
 
-function navigateToTask() {
-	if (task) {
-		goto(getTaskPath(experimentId, task));
-	} else {
-		goto(`/experiments/${experimentId}/start`);
+	function navigateToTask() {
+		if (task) {
+			goto(getTaskPath(experimentId, task));
+		} else {
+			goto(`/experiments/${experimentId}/start`);
+		}
 	}
-}
 
 	onMount(() => {
 		unsubscribe = currentExperiment.subscribe((value) => {
@@ -77,7 +77,7 @@ function navigateToTask() {
 
 		if (!submissionData) {
 			// 送信データがない場合はタスクページに戻る
-		navigateToTask();
+			navigateToTask();
 			return;
 		}
 
@@ -110,7 +110,7 @@ function navigateToTask() {
 	}
 
 	function handleBack() {
-	navigateToTask();
+		navigateToTask();
 	}
 </script>
 
@@ -142,7 +142,7 @@ function navigateToTask() {
 				{#if task.type === 'questionnaire' && submissionData.responses && questionnaire}
 					<div class="space-y-4">
 						<h3 class="text-lg font-semibold">アンケート回答</h3>
-						{#each (submissionData.responses as Array<{ questionId: string; value: string }>) as response}
+						{#each submissionData.responses as Array<{ questionId: string; value: string }> as response}
 							{@const question = questionnaire.questions.find((q) => q.id === response.questionId)}
 							<div class="rounded-lg border p-4">
 								<p class="text-sm font-semibold text-gray-700">
@@ -155,7 +155,7 @@ function navigateToTask() {
 				{:else if task.type === 'comprehension-test' && submissionData.answers && comprehension}
 					<div class="space-y-4">
 						<h3 class="text-lg font-semibold">理解度テスト回答</h3>
-						{#each (submissionData.answers as Array<{ questionId: string; answer: number }>) as answer}
+						{#each submissionData.answers as Array<{ questionId: string; answer: number }> as answer}
 							{@const question = comprehension.questions.find((q) => q.id === answer.questionId)}
 							<div class="rounded-lg border p-4">
 								<p class="text-sm font-semibold text-gray-700">
@@ -190,7 +190,8 @@ function navigateToTask() {
 						<h3 class="text-lg font-semibold">センテンス評価</h3>
 						<div class="rounded-lg border p-4">
 							<p class="text-sm font-semibold text-gray-700">
-								評価数: {Object.keys(submissionData.annotations as Record<string, unknown>).length}件
+								評価数: {Object.keys(submissionData.annotations as Record<string, unknown>)
+									.length}件
 							</p>
 						</div>
 					</div>
@@ -199,7 +200,8 @@ function navigateToTask() {
 						<h3 class="text-lg font-semibold">テキストフィードバック</h3>
 						<div class="rounded-lg border p-4">
 							<p class="text-sm font-semibold text-gray-700">
-								コメント数: {Object.keys(submissionData.feedbacks as Record<string, unknown>).length}件
+								コメント数: {Object.keys(submissionData.feedbacks as Record<string, unknown>)
+									.length}件
 							</p>
 						</div>
 					</div>
@@ -223,4 +225,3 @@ function navigateToTask() {
 		</Card>
 	</div>
 {/if}
-
