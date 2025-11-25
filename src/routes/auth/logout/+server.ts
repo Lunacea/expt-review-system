@@ -1,11 +1,7 @@
-// ログアウトAPIエンドポイント
+import { redirect } from '@sveltejs/kit';
 
-import { json } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
-import { clearSession } from '$lib/server/auth/session';
-
-export const POST: RequestHandler = async ({ cookies }) => {
-	clearSession({ cookies } as any);
-	return json({ success: true });
+export const POST = async ({ cookies }) => {
+	cookies.delete('session_user', { path: '/' });
+	throw redirect(303, '/');
 };
 

@@ -149,6 +149,20 @@ export function restoreCurrentExperiment(): Experiment | null {
 	}
 }
 
+// API呼び出しヘルパー
+async function apiCall(url: string, body: any) {
+	if (typeof window === 'undefined') return;
+	try {
+		await fetch(url, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(body)
+		});
+	} catch (e) {
+		console.error(`API call to ${url} failed`, e);
+	}
+}
+
 // 実験を開始
 export function startExperiment(experiment: Experiment) {
 	// 既存の実験履歴を確認
@@ -173,6 +187,14 @@ export function startExperiment(experiment: Experiment) {
 
 	currentExperiment.set(updatedExp);
 	persistCurrentExperiment(updatedExp);
+
+	// サーバーに同期（初期化）
+	apiCall('/api/experiments/sync', {
+		action: 'init',
+		experimentId: updatedExp.id,
+		experimentType: updatedExp.type,
+		tasks: updatedExp.tasks
+	});
 
 	// 参加者データに追加または更新
 	participantData.update((data) => {
@@ -262,6 +284,15 @@ export function completeTask(taskId: string) {
 
 		persistCurrentExperiment(updatedExperiment);
 
+		// サーバーに同期（タスク完了）
+		apiCall('/api/experiments/sync', {
+			action: 'update_task',
+			experimentId: updatedExperiment.id,
+			taskId,
+			completed: true,
+			data: { completedAt: new Date().toISOString() }
+		});
+
 		// 参加者データの履歴も更新
 		participantData.update((data) => {
 			if (!data) return data;
@@ -316,6 +347,14 @@ export function uncompleteTask(taskId: string) {
 
 		persistCurrentExperiment(updatedExperiment);
 
+		// サーバーに同期（タスク未完了に戻す）
+		apiCall('/api/experiments/sync', {
+			action: 'update_task',
+			experimentId: updatedExperiment.id,
+			taskId,
+			completed: false
+		});
+
 		// 参加者データの履歴も更新
 		participantData.update((data) => {
 			if (!data) return data;
@@ -358,6 +397,15 @@ export function logEvent(eventType: ExperimentLog['eventType'], data: Record<str
 	};
 
 	experimentLogs.update((logs) => [...logs, log]);
+
+	// サーバーにログ送信
+	apiCall('/api/experiments/log', {
+		experimentId: exp.id,
+		taskId: task.id,
+		eventType,
+		data,
+		timestamp: log.timestamp
+	});
 }
 
 export function clearCurrentExperiment() {

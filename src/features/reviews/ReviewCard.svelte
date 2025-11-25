@@ -1,98 +1,55 @@
 <script lang="ts">
-	import type { Review } from '$lib/types/reviews';
-	import Rating from '$features/reviews/Rating.svelte';
-	import { Card, CardContent, CardHeader } from '$shared/components/ui/card';
-	import { Badge } from '$shared/components/ui/badge';
-	import { Avatar, AvatarFallback, AvatarImage } from '$shared/components/ui/avatar';
-	import { ThumbsUp, ThumbsDown } from '@lucide/svelte';
+    import Rating from './Rating.svelte';
+    import placeholder from '$lib/assets/favicon.svg'; // Use favicon as placeholder if image fails
 
-	interface Props {
-		review: Review;
-		showHelpfulVotes?: boolean;
-		class?: string;
-	}
-
-	let { review, showHelpfulVotes = false, class: className = '' }: Props = $props();
-
-	// 日付をフォーマット
-	function formatDate(dateString: string): string {
-		const date = new Date(dateString);
-		return date.toLocaleDateString('ja-JP', {
-			year: 'numeric',
-			month: 'long',
-			day: 'numeric'
-		});
-	}
-
-	// ユーザー名のイニシャルを取得
-	function getInitials(name: string): string {
-		return name.charAt(0);
-	}
-
-	// 連続した改行を1つだけ減らす（2つ以上の連続した改行を1つ減らす）
-	function normalizeNewlines(text: string): string {
-		// Windows改行（\r\n）とUnix改行（\n）の両方に対応
-		// 2つ以上の連続した改行を1つ減らす
-		return text
-			.replace(/(\r\n){2,}/g, (match) => {
-				// 最後の\r\nを1つだけ削除
-				return match.slice(0, -2);
-			})
-			.replace(/\n{2,}/g, (match) => {
-				// 最後の\nを1つだけ削除
-				return match.slice(0, -1);
-			});
-	}
+    let { review } = $props();
 </script>
 
-<Card class={className}>
-	<CardHeader>
-		<div class="flex items-start gap-3">
-			<Avatar>
-				<AvatarImage src={review.userAvatar} alt={review.userName} />
-				<AvatarFallback>{getInitials(review.userName)}</AvatarFallback>
-			</Avatar>
-			<div class="flex-1">
-				<div class="flex items-center gap-2">
-					<span class="font-semibold">{review.userName}</span>
-				</div>
-				<div class="mt-1 flex items-center gap-2">
-					<Rating rating={review.rating} size={14} showNumber={false} />
-					<span class="text-sm font-bold">{review.title}</span>
-				</div>
-				<div class="mt-1 text-xs text-gray-500">
-					{formatDate(review.createdAt)}にレビュー済み
-				</div>
-			</div>
-		</div>
-	</CardHeader>
-	<CardContent>
-		<p class="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">
-			{normalizeNewlines(review.content)}
-		</p>
+<div class="border-b border-gray-200 pb-6 mb-6">
+    <!-- Product Info Header -->
+    <div class="flex items-start mb-4 bg-gray-50 p-3 rounded">
+        <div class="flex-shrink-0">
+            <!-- Mock Image -->
+            <div class="w-12 h-12 bg-white border border-gray-200 flex items-center justify-center rounded">
+                <span class="text-xs text-gray-400">IMG</span>
+            </div>
+        </div>
+        <div class="ml-3">
+            <h4 class="text-sm font-bold text-gray-900 hover:text-indigo-600 hover:underline cursor-pointer">
+                {review.productName}
+            </h4>
+            <p class="text-xs text-gray-500">価格: ¥{review.productPrice?.toLocaleString()}</p>
+        </div>
+    </div>
 
-		{#if showHelpfulVotes && review.totalVotes > 0}
-			<div class="mt-4 flex items-center gap-2 border-t pt-3">
-				<span class="text-sm text-gray-600">
-					{review.helpfulVotes}人中{review.totalVotes}人が参考になったと回答
-				</span>
-			</div>
-		{/if}
+    <!-- Review Header -->
+    <div class="flex items-center mb-2">
+        <div class="flex-shrink-0 mr-2">
+            <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+                <span class="text-xs text-gray-500">User</span>
+            </div>
+        </div>
+        <span class="text-sm font-medium text-gray-900">{review.author}</span>
+    </div>
 
-		<div class="mt-4 flex items-center gap-2">
-			<span class="text-sm text-gray-600">このレビューは参考になりましたか？</span>
-			<button
-				class="flex items-center gap-1 rounded-md border px-3 py-1 text-sm transition-colors hover:bg-gray-50"
-			>
-				<ThumbsUp size={14} />
-				はい
-			</button>
-			<button
-				class="flex items-center gap-1 rounded-md border px-3 py-1 text-sm transition-colors hover:bg-gray-50"
-			>
-				<ThumbsDown size={14} />
-				いいえ
-			</button>
-		</div>
-	</CardContent>
-</Card>
+    <div class="flex items-center mb-1">
+        <Rating rating={review.rating || 3} />
+        <span class="ml-2 text-sm font-bold text-gray-900">{review.title}</span>
+    </div>
+    
+    <div class="text-xs text-gray-500 mb-4">
+        {review.date} に日本でレビュー済み
+        {#if review.verifiedPurchase}
+            <span class="ml-2 text-orange-600 font-bold">| Amazonで購入</span>
+        {/if}
+    </div>
+
+    <!-- Review Body (Slot or Text) -->
+    <div class="text-sm text-gray-800 leading-relaxed mb-4">
+        <slot />
+    </div>
+
+    <div class="text-sm text-gray-500">
+        {review.helpfulCount}人のお客様がこれが役に立ったと考えています
+    </div>
+</div>

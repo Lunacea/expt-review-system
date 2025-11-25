@@ -1,16 +1,9 @@
-<script lang="ts">
-	import '$shared/styles/app.css';
-	import favicon from '$lib/assets/favicon.svg';
-	import HeaderWithAvator from '$widgets/layout/HeaderWithAvator.svelte';
+<script>
+	import '../shared/styles/app.css';
 	let { children } = $props();
 </script>
 
-<svelte:head>
-	<link rel="icon" href={favicon} />
-</svelte:head>
+<div class="min-h-screen bg-gray-50 text-gray-900 font-sans">
+	{@render children()}
+</div>
 
-<HeaderWithAvator title="カスタマーレビューシステム実験" />
-
-<main class="mx-auto max-w-screen-md p-2">
-	{@render children?.()}
-</main>

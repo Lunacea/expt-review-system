@@ -1,77 +1,38 @@
 <script lang="ts">
-	import { Card, CardContent, CardHeader, CardTitle } from '$shared/components/ui/card';
-	import { Button } from '$shared/components/ui/button';
-	import { ShoppingBag, FlaskConical } from '@lucide/svelte';
+	let { form } = $props();
 </script>
 
-<svelte:head>
-	<title>カスタマーレビューシステム実験 | ホーム</title>
-</svelte:head>
-
-<div class="space-y-8">
-	<!-- ヒーローセクション -->
-	<div class="rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 p-8 text-white">
-		<h1 class="text-4xl font-bold">カスタマーレビューシステム実験</h1>
-		<p class="mt-4 text-lg opacity-90">Amazonライクなレビューシステムの実験プラットフォーム</p>
+<div class="max-w-md mx-auto mt-20 p-6 bg-white rounded-lg shadow-md">
+	<h1 class="text-2xl font-bold mb-6 text-center">カスタマーレビューシステム実験</h1>
+	
+	<div class="mb-8 text-gray-700">
+		<p class="mb-2">本実験にご協力いただきありがとうございます。</p>
+		<p class="mb-2">以下のフォームに被験者IDを入力してログインしてください。</p>
 	</div>
 
-	<!-- 実験概要 -->
-	<Card>
-		<CardHeader>
-			<CardTitle>実験概要</CardTitle>
-		</CardHeader>
-		<CardContent class="space-y-4">
-			<p class="text-gray-700">
-				本実験では、Amazonのようなレビューシステムにおける評価機能の有効性を検証します。
-				従来の数値的な評価と、より詳細な選択式の評価を比較し、ユーザーにとってより良いシステムを明らかにします。
-			</p>
-			<div class="grid gap-4 md:grid-cols-3">
-				<div class="rounded-lg border p-4">
-					<h4 class="mb-2 font-semibold">所要時間</h4>
-					<p class="text-sm text-gray-600">各実験は5〜15分程度で完了します</p>
-				</div>
-				<div class="rounded-lg border p-4">
-					<h4 class="mb-2 font-semibold">データの取り扱い</h4>
-					<p class="text-sm text-gray-600">匿名で記録され、研究目的のみに使用されます</p>
-				</div>
-				<div class="rounded-lg border p-4">
-					<h4 class="mb-2 font-semibold">途中保存</h4>
-					<p class="text-sm text-gray-600">途中で中断しても、後から続けられます</p>
-				</div>
-			</div>
-		</CardContent>
-	</Card>
-
-	<!-- アクションボタン -->
-	<div class="grid gap-6 md:grid-cols-2">
-		<div class="rounded-lg border-2 border-dashed bg-gray-50 p-8 text-center">
-			<h3 class="text-xl font-bold">システムのプレビュー</h3>
-			<p class="mt-2 text-gray-600">
-				商品一覧から気になる商品を選んで、各レビュー機能を体験してください。
-			</p>
-			<div class="mt-6">
-				<a href="/products">
-					<Button size="lg">
-						<ShoppingBag class="mr-2" size={20} />
-						プレビューへ
-					</Button>
-				</a>
-			</div>
+	<form method="POST" action="?/login" class="space-y-4">
+		<div>
+			<label for="username" class="block text-sm font-medium text-gray-700">被験者ID</label>
+			<input 
+				type="text" 
+				id="username" 
+				name="username" 
+				required 
+				class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
+				placeholder="IDを入力"
+			/>
 		</div>
 
-		<div class="rounded-lg border-2 border-purple-500 bg-purple-50 p-8 text-center">
-			<h3 class="text-xl font-bold">実験に参加する</h3>
-			<p class="mt-2 text-gray-600">
-				レビューシステムの研究にご協力いただける方は、実験にご参加ください。
-			</p>
-			<div class="mt-6">
-				<a href="/experiments/overview">
-					<Button size="lg" class="bg-purple-600 hover:bg-purple-700">
-						<FlaskConical class="mr-2" size={20} />
-						実験へ
-					</Button>
-				</a>
-			</div>
-		</div>
-	</div>
+		{#if form?.error}
+			<p class="text-red-600 text-sm">{form.error}</p>
+		{/if}
+
+		<button 
+			type="submit" 
+			class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+		>
+			ログイン / 実験開始
+		</button>
+	</form>
 </div>
+

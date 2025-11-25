@@ -1,114 +1,100 @@
-// ユーザー関連のデータベース操作
-
 import { getDB } from './client';
 import { Collections, type User } from './models';
-import bcrypt from 'bcrypt';
-import { ObjectId } from 'mongodb';
 
-const SALT_ROUNDS = 10;
-
-// ユーザー作成
-export async function createUser(
-	username: string,
-	email: string,
-	password: string,
-	displayName: string,
-	role: User['role'] = 'participant'
-): Promise<User> {
+export async function getUser(username: string): Promise<User | null> {
 	const db = await getDB();
-	const users = db.collection<User>(Collections.USERS);
+	return await db.collection<User>(Collections.USERS).findOne({ username });
+}
 
-	// 既存ユーザーチェック
-	const existing = await users.findOne({
-		$or: [{ username }, { email }]
-	});
-
-	if (existing) {
-		throw new Error('ユーザー名またはメールアドレスが既に使用されています');
-	}
-
-	// パスワードをハッシュ化
-	const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-
+export async function createUser(username: string): Promise<User> {
+	const db = await getDB();
 	const user: User = {
 		username,
-		email,
-		password: hashedPassword,
-		displayName,
-		role,
+		experimentProgress: {},
 		createdAt: new Date(),
 		updatedAt: new Date()
 	};
-
-	const result = await users.insertOne(user);
-	return { ...user, _id: result.insertedId };
-}
-
-// ユーザー認証
-export async function authenticateUser(
-	username: string,
-	password: string
-): Promise<User | null> {
-	const db = await getDB();
-	const users = db.collection<User>(Collections.USERS);
-
-	const user = await users.findOne({ username });
-	if (!user) {
-		return null;
-	}
-
-	const isValid = await bcrypt.compare(password, user.password);
-	if (!isValid) {
-		return null;
-	}
-
-	// 最終ログイン時刻を更新
-	await users.updateOne(
-		{ _id: user._id },
-		{
-			$set: {
-				lastLoginAt: new Date(),
-				updatedAt: new Date()
-			}
-		}
-	);
-
+	const res = await db.collection<User>(Collections.USERS).insertOne(user);
+	user._id = res.insertedId;
 	return user;
 }
 
-// ユーザーIDで取得
-export async function getUserById(userId: string | ObjectId): Promise<User | null> {
+export async function updateUserConsent(username: string, consentData: User['consent']): Promise<void> {
 	const db = await getDB();
-	const users = db.collection<User>(Collections.USERS);
-
-	const id = typeof userId === 'string' ? new ObjectId(userId) : userId;
-	return await users.findOne({ _id: id });
+	await db.collection<User>(Collections.USERS).updateOne(
+		{ username },
+		{ 
+			$set: { 
+				consent: consentData,
+				updatedAt: new Date()
+			} 
+		}
+	);
 }
 
-// ユーザー名で取得
-export async function getUserByUsername(username: string): Promise<User | null> {
+export async function updateTaskStatus(
+	username: string, 
+	experimentId: string, 
+	taskId: string, 
+	status: 'completed',
+    resultData?: any
+): Promise<void> {
 	const db = await getDB();
-	const users = db.collection<User>(Collections.USERS);
+	const updatePath = `experimentProgress.${experimentId}.tasks.${taskId}`;
+	
+    // Note: Using dot notation for keys in $set allows updating deep nested fields
+    // without overwriting the whole object.
+    // However, the `result` field needs to be explicitly set.
+    
+    const updateQuery: any = {
+        $set: { 
+            [`${updatePath}.status`]: status,
+            [`${updatePath}.completedAt`]: new Date(),
+            updatedAt: new Date()
+        } 
+    };
 
-	return await users.findOne({ username });
+    if (resultData !== undefined) {
+        // Directly set the result object
+        updateQuery.$set[`${updatePath}.result`] = resultData;
+    }
+
+    console.log(`Updating task status for ${username}:`, JSON.stringify(updateQuery, null, 2));
+
+	const res = await db.collection<User>(Collections.USERS).updateOne(
+		{ username },
+		updateQuery
+	);
+    
+    console.log('Update result:', res);
 }
 
-// すべてのユーザーを取得（管理用）
-export async function getAllUsers(): Promise<User[]> {
-	const db = await getDB();
-	const users = db.collection<User>(Collections.USERS);
-
-	return await users.find({}).toArray();
+export async function updateExperimentStatus(
+    username: string,
+    experimentId: string,
+    status: 'completed'
+): Promise<void> {
+    const db = await getDB();
+    await db.collection<User>(Collections.USERS).updateOne(
+        { username },
+        {
+            $set: {
+                [`experimentProgress.${experimentId}.status`]: status,
+                updatedAt: new Date()
+            }
+        }
+    );
 }
 
-// ユーザー削除
-export async function deleteUser(userId: string | ObjectId): Promise<boolean> {
-	const db = await getDB();
-	const users = db.collection<User>(Collections.USERS);
-
-	const id = typeof userId === 'string' ? new ObjectId(userId) : userId;
-	const result = await users.deleteOne({ _id: id });
-
-	return result.deletedCount > 0;
+export async function completeSystem(username: string): Promise<void> {
+    const db = await getDB();
+    await db.collection<User>(Collections.USERS).updateOne(
+        { username },
+        {
+            $set: {
+                completedAt: new Date(),
+                updatedAt: new Date()
+            }
+        }
+    );
 }
-
