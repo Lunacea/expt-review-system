@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb';
 
 export interface User {
 	_id?: ObjectId;
-	username: string; 
+	username: string;
 	consent?: {
 		name: string;
 		date: Date;
@@ -16,15 +16,15 @@ export interface User {
 	experimentProgress: {
 		[experimentId: string]: {
 			status: 'pending' | 'in_progress' | 'completed';
-			tasks: {
+	tasks: {
 				[taskId: string]: {
 					status: 'pending' | 'completed';
-					completedAt?: Date;
+		completedAt?: Date;
 				};
 			};
 		};
 	};
-    completedAt?: Date; 
+	completedAt?: Date;
 	createdAt: Date;
 	updatedAt: Date;
 }

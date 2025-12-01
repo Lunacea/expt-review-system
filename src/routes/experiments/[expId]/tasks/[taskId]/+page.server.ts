@@ -26,11 +26,13 @@ export const load = async ({ params, locals }) => {
     }
 
     const status = locals.user?.experimentProgress?.[expId]?.tasks?.[taskId]?.status || 'pending';
+    const result = locals.user?.experimentProgress?.[expId]?.tasks?.[taskId]?.result || null;
     
     return {
         experiment,
         task: taskConfig,
         status,
+        savedResult: result, // Pass saved result to client
         nextTask: nextTaskConfig
     };
 };
@@ -41,6 +43,23 @@ export const actions = {
         if (!locals.user) return fail(401);
         
         const data = await request.formData();
+        const actionType = data.get('action'); // 'complete' or 'reset'
+
+        if (actionType === 'reset') {
+            console.log(`Resetting task ${taskId} for user ${locals.user.username}`);
+             try {
+                // Pass null resultData to clear it, and set status to 'pending' (or 'in_progress' if preferred, but 'pending' implies incomplete)
+                // Actually updateTaskStatus implementation handles `resultData` update. 
+                // We need to ensure we can clear it.
+                // Let's assume passing specific flag or null works.
+                await updateTaskStatus(locals.user.username, expId, taskId, 'pending', null); 
+            } catch (e) {
+                console.error('DB Reset Failed:', e);
+                return fail(500, { error: 'Failed to reset progress' });
+            }
+             return { success: true, reset: true };
+        }
+
         const resultRaw = data.get('result');
         let result = null;
         if (resultRaw) {

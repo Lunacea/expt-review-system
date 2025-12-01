@@ -5,3 +5,4 @@ export const POST = async ({ cookies }) => {
 	throw redirect(303, '/');
 };
 
+

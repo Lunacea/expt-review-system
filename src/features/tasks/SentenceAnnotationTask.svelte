@@ -39,8 +39,6 @@
                 result.push({ type: 'break' });
                 continue;
             }
-            // Split by punctuation but keep it attached?
-            // Simple split by 。
             const sentences = p.split(/(?<=。)/);
             for (let s of sentences) {
                 if (s.trim()) {
@@ -52,7 +50,6 @@
         return result;
     }
 
-    // Pre-parse sentences for all reviews
     const parsedReviews = items.map(r => ({
         ...r,
         sentences: parseSentences(r.text)
@@ -77,12 +74,12 @@
         } else {
             list.push(reactionId);
         }
+        
+        allAnnotations = { ...allAnnotations }; // trigger reactivity
+        dispatch('change', { annotations: allAnnotations });
     }
-
-    function submit() {
-        // Always allow submission (optional task)
-        dispatch('complete', { annotations: allAnnotations });
-    }
+    
+    dispatch('change', { annotations: {} });
 </script>
 
 <div class="space-y-10 relative pb-32">
@@ -141,13 +138,4 @@
             </div>
         </div>
     {/if}
-
-    <div class="text-center py-8">
-        <button 
-            onclick={submit}
-            class="w-full sm:w-auto inline-flex items-center px-8 py-4 border border-transparent text-lg font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
-        >
-            すべての評価を完了する
-        </button>
-    </div>
 </div>

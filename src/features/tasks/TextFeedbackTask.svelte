@@ -16,11 +16,10 @@
     
     function updateFeedback(id: string, val: string) {
         feedbacks[id] = val;
+        dispatch('change', { feedbacks });
     }
-
-    function submit() {
-        dispatch('complete', { feedbacks });
-    }
+    
+    dispatch('change', { feedbacks: {} });
 </script>
 
 <div class="space-y-10">
@@ -44,13 +43,4 @@
             </div>
         </div>
     {/each}
-
-    <div class="text-center py-8">
-        <button 
-            onclick={submit}
-            class="w-full sm:w-auto inline-flex items-center px-8 py-4 border border-transparent text-lg font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition-colors"
-        >
-            すべての評価を完了する
-        </button>
-    </div>
 </div>

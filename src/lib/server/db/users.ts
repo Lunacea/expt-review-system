@@ -36,26 +36,23 @@ export async function updateTaskStatus(
 	username: string, 
 	experimentId: string, 
 	taskId: string, 
-	status: 'completed',
+	status: 'completed' | 'pending', // Allow pending for reset
     resultData?: any
 ): Promise<void> {
 	const db = await getDB();
 	const updatePath = `experimentProgress.${experimentId}.tasks.${taskId}`;
 	
-    // Note: Using dot notation for keys in $set allows updating deep nested fields
-    // without overwriting the whole object.
-    // However, the `result` field needs to be explicitly set.
-    
     const updateQuery: any = {
         $set: { 
             [`${updatePath}.status`]: status,
-            [`${updatePath}.completedAt`]: new Date(),
+            [`${updatePath}.completedAt`]: status === 'completed' ? new Date() : null, // Clear date on reset
             updatedAt: new Date()
         } 
     };
 
     if (resultData !== undefined) {
-        // Directly set the result object
+        // If resultData is explicitly passed (even null), update it
+        // If null, it clears the field in the document structure effectively (or sets to null)
         updateQuery.$set[`${updatePath}.result`] = resultData;
     }
 

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 
 	// Components
@@ -14,25 +13,48 @@
 
 	let experiment = $derived(data.experiment);
 	let task = $derived(data.task);
-	let status = $derived(data.status);
 	let nextTask = $derived(data.nextTask);
 
 	let currentStatus = $state(data.status);
 	let taskData = $state({});
+	// Validation flag from child components (default true for optional tasks, false for required ones like questionnaire)
+	let isTaskValid = $state(true);
 
 	$effect(() => {
 		currentStatus = data.status;
+		// Reset valid state when task changes or status resets
+		if (data.status === 'completed') {
+			isTaskValid = true;
+		} else {
+			// Default validity depends on task type potentially, but here we listen to component events
+			// For safety, assume invalid if it's a strict task, but most are optional now except Questionnaire/Quiz
+			isTaskValid = !['questionnaire', 'comprehension_test'].includes(task.type);
+		}
 		taskData = {};
 	});
 
 	$effect(() => {
 		if (form?.success) {
-			currentStatus = 'completed';
+			if (form.reset) {
+				currentStatus = 'pending';
+				isTaskValid = !['questionnaire', 'comprehension_test'].includes(task.type); // Reset validity
+			} else {
+				currentStatus = 'completed';
+			}
 		}
 	});
 
-	function handleTaskComplete(e: CustomEvent) {
+	function handleTaskChange(e: CustomEvent) {
 		taskData = e.detail;
+		// Check specific validity properties if sent
+		if (e.detail.isValid !== undefined) {
+			isTaskValid = e.detail.isValid;
+		} else if (e.detail.isComplete !== undefined) {
+			isTaskValid = e.detail.isComplete;
+		} else {
+			// For annotation/helpful/text, it's always valid (optional)
+			isTaskValid = true;
+		}
 	}
 </script>
 
@@ -47,43 +69,64 @@
 			</div>
 
 			<div class="mt-6 border-t border-gray-200 pt-6">
+				<!-- If completed, show message or read-only view? 
+                     Requirement: "Ability to make incomplete". 
+                     So we should probably show the active task even if completed, 
+                     but maybe with current values? 
+                     For now, let's keep it editable. -->
+
 				{#if task.type === 'helpful_votes'}
-					<HelpfulVotesTask {...task.props || {}} on:complete={handleTaskComplete} />
+					<HelpfulVotesTask {...task.props || {}} on:change={handleTaskChange} />
 				{:else if task.type === 'text_feedback'}
-					<TextFeedbackTask {...task.props || {}} on:complete={handleTaskComplete} />
+					<TextFeedbackTask {...task.props || {}} on:change={handleTaskChange} />
 				{:else if task.type === 'sentence_annotation'}
-					<SentenceAnnotationTask {...task.props || {}} on:complete={handleTaskComplete} />
+					<SentenceAnnotationTask {...task.props || {}} on:change={handleTaskChange} />
 				{:else if task.type === 'questionnaire'}
-					<QuestionnaireTask {...task.props || {}} on:complete={handleTaskComplete} />
+					<QuestionnaireTask {...task.props || {}} on:change={handleTaskChange} />
 				{:else if task.type === 'comprehension_test'}
-					<ComprehensionTestTask {...task.props || {}} on:complete={handleTaskComplete} />
+					<ComprehensionTestTask {...task.props || {}} on:change={handleTaskChange} />
 				{:else}
 					<p class="text-gray-700">Unknown Task Type: {task.type}</p>
 				{/if}
 			</div>
 
-			<div class="mt-8 flex justify-end space-x-4">
+			<div
+				class="sticky bottom-0 mt-8 flex justify-end space-x-4 border-t bg-white bg-opacity-90 pb-2 pt-4 backdrop-blur"
+			>
 				{#if currentStatus !== 'completed'}
 					<form method="POST" action="?/complete" use:enhance>
+						<input type="hidden" name="action" value="complete" />
 						<input type="hidden" name="result" value={JSON.stringify(taskData)} />
 
 						<button
 							type="submit"
-							disabled={false}
-							class="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-gray-300"
+							disabled={!isTaskValid}
+							class="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-300"
 						>
 							タスクを完了して保存
 						</button>
 					</form>
 				{:else}
-					<span
-						class="inline-flex items-center rounded-md border border-transparent bg-green-100 px-4 py-2 text-sm font-medium text-green-700"
-					>
-						完了済み
-					</span>
+					<div class="flex items-center space-x-4">
+						<span
+							class="inline-flex items-center rounded-md border border-transparent bg-green-100 px-4 py-2 text-sm font-medium text-green-700"
+						>
+							完了済み
+						</span>
+
+						<form method="POST" action="?/complete" use:enhance>
+							<input type="hidden" name="action" value="reset" />
+							<button
+								type="submit"
+								class="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-red-600 shadow-sm hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+							>
+								未完了に戻す（データをクリア）
+							</button>
+						</form>
+					</div>
 				{/if}
 
-				<div class="ml-4">
+				<div class="ml-4 border-l pl-4">
 					{#if nextTask}
 						<a
 							href="/experiments/{experiment.id}/tasks/{nextTask.id}"
